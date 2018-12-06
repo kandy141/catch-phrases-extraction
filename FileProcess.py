@@ -100,12 +100,12 @@ def get_features_row(file_id,Id,text,catch_words):
     rows_list=[]
     if word_count>2*window_size+1:
         for i in range(window_size,word_count-window_size):
-            
+            sentence = get_sentence_hash(Id, file_id)
             inputs=words[i-window_size:i+window_size+1];
             inputs=lookup_indexes(inputs)
             is_catchword = 1 if words[i] in catch_words else 0
             
-            rows_list.append({"file_id":file_id, "Id":Id, "words":inputs, "is_catchword":is_catchword})
+            rows_list.append({"file_id":file_id, "Id":get_hash(sentence), "words":inputs, "is_catchword":is_catchword})
     return rows_list
    
 
@@ -115,38 +115,38 @@ def get_features_row(file_id,Id,text,catch_words):
 
 def get_catch_words(catch_df):
     catch_words=[]
+    catch_phrases=[]
     for index, row in catch_df.iterrows():
-        
+        catch_phrases.append(row['text']);
         words=word_tokenize(row['text']);
         temp=[word for word in words if not word in stop_words_list]
         catch_words=catch_words+temp;
-    return catch_words;
+    return catch_words,catch_phrases;
 
 
 # In[ ]:
+
+def get_sentence_hash(sentence_id, file_name):
+    q=full_data[(full_data.file_id==file_name) & (full_data.Id==sentence_id)].text
+    return q.values[0]
 
 
 def get_dataframe(file_name):
-    file_data=full_data[full_data.file_id==file_name];
-    catch_df=file_data[file_data['Id'].str.startswith(('c'))]
-    catch_words=get_catch_words(catch_df);
+    file_data = full_data[full_data.file_id==file_name];
+    catch_df = file_data[file_data['Id'].str.startswith(('c'))]
+    catch_words,catch_phrases = get_catch_words(catch_df);
     
-    sent_df=file_data[file_data['Id'].str.startswith(('s'))]
+    sent_df = file_data[file_data['Id'].str.startswith(('s'))]
     sent_df = sent_df[:-1]
-    file_dataframe=[];
+    file_dataframe = [];
     count=0;
     for index, row in sent_df.iterrows():
-        count=count+1;
+        count = count+1;
         #print(get_features_row_dummy(row['file_id'],row['Id'],row['text']))
-        temp=get_features_row(row['file_id'],row['Id'],row['text'],catch_words)
+        temp = get_features_row(row['file_id'],row['Id'],row['text'],catch_words)
         if len(temp)>0:
             file_dataframe=file_dataframe+temp;
 
-    return pd.DataFrame(file_dataframe);
-
+    return pd.DataFrame(file_dataframe),catch_phrases;
 
 # In[ ]:
-
-
-print(get_dataframe('08_1056.xml'))
-
