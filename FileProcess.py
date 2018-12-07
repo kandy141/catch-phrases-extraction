@@ -90,7 +90,8 @@ def lookup_indexes(sentences):
 
 
 def get_sentences(file):
-    with open(dirpath + file, 'r',encoding="utf-8", errors='replace') as f:
+    #with open(dirpath + file, 'r',encoding="utf-8", errors='replace') as f:
+    with open(dirpath + file, 'r') as f:
         data=str(f.read());
         data=data.lower()
         data = data.replace("\"id=", "id=\"");
