@@ -14,44 +14,53 @@ import numpy as np
 import os
 from os.path import isfile,join
 import xml.etree.cElementTree as ET
+import pickle
 
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 import gensim
 dirpath = "corpus/fulltext/"
+embedding_filename = "word2vec.model" 
 # In[ ]:
 
 
+start = time.time()
 window_size = 2;
+embedding_size = 50
 stop_words_list = set(stopwords.words('english'))
 
 
-def read_data(file_name):
-    with open(file_name, 'r') as f:
-        word_vocab = set()  # not using list to avoid duplicate entry
-        word_count = {};
-        word_index = {};
+dictionary, word_embeds = pickle.load(open(embedding_filename, 'rb'))
 
-        word2vector = {}
-        count = 0;
-        for line in f:
-            line_ = line.strip()  # Remove white space
-            words_Vec = line_.split()
-            word_vocab.add(words_Vec[0])
-            word_index[words_Vec[0]] = count;
-            count = count + 1;
-            word2vector[words_Vec[0]] = np.array(words_Vec[1:], dtype=float)
-    print("Total Words in DataSet:", len(word_vocab))
-    return word_vocab, word2vector, word_index
+f=open('filtered_words.txt', 'r')
+words = f.readlines()
+word_index = {}
+simplied_embedding_array = np.zeros((len(words), embedding_size))
+foundEmbed = 0
+for i in range(len(simplied_embedding_array)):
+    index = -1
+    w = words[i]
+    if w in dictionary:
+        index = dictionary[w]
+    elif w.lower() in dictionary:
+        index = dictionary[w.lower()]
+    if index >= 0:
+        foundEmbed += 1
+        simplied_embedding_array[i] = word_embeds[index]
+    else:
+        simplied_embedding_array[i] = np.random.rand(embedding_size) * 0.02 - 0.01
+    word_index[w] = i
+    
+print ("Found embeddings: ", foundEmbed, "/", len(words))
+print ('word_index len = ', len(word_index))
+
+embedding_array = simplied_embedding_array
 
 
-vocab, w2v, word_index = read_data("glove_6B_200d.txt");
-
-full_data = pd.read_csv('./data.csv');
-print("shape of data:", np.shape(full_data))
-
-catch_df = full_data[full_data['Id'].str.startswith(('c'))]
-sent_df = full_data[full_data['Id'].str.startswith(('s'))]
+# full_data = pd.read_csv('./data.csv');
+# print("shape of data:", np.shape(full_data))
+# catch_df = full_data[full_data['Id'].str.startswith(('c'))]
+# sent_df = full_data[full_data['Id'].str.startswith(('s'))]
 
 
 # utiil
@@ -137,7 +146,7 @@ def get_features_row(sent_df,file_id, Id, text, catch_words):
     rows_list = []
     if word_count > 2 * window_size + 1:
         for i in range(window_size, word_count - window_size):
-            sentence = get_sentence_hash(sent_df,Id, file_id)
+            #sentence = get_sentence_hash(sent_df,Id, file_id)
             inputs = words[i - window_size:i + window_size + 1];
             inputs = lookup_indexes(inputs)
             is_catchword = 1 if words[i] in catch_words else 0
@@ -161,17 +170,11 @@ def get_catch_words(catch_df):
     return catch_words, catch_phrases;
 
 
-
+'''
 def get_file_sentences(file_name):
     temp_data=full_data[(full_data.file_id==file_name) & full_data['Id'].str.startswith(('s'))]
     return list(temp_data.text.values)[:-1]
-
-
-# In[ ]:
-
-def get_sentence_hash(sent_df,sentence_id, file_name):
-    q = sent_df[(sent_df.file_id == file_name) & (sent_df.Id == sentence_id)].text
-    return q.values[0]
+'''
 
 
 def get_dataframe(sent_df,catch_df):
@@ -189,8 +192,5 @@ def get_dataframe(sent_df,catch_df):
 
     return pd.DataFrame(file_dataframe), catch_phrases;
 
-print("Started")
-start=time.time()
-#print(get_dataframe("06_1.xml"))
 
-print("time-taken:",time.time()-start)
+print("time-taken for FP: ",time.time()-start)
