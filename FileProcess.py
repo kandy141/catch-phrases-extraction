@@ -124,7 +124,6 @@ def get_sentences(file):
                     id = sentence.attrib.get("id")
                     sentences.append(sentence.text)
                     #sentences+=tokenizer.tokenize(sentence.text)
- 
     
     return sentences
 
