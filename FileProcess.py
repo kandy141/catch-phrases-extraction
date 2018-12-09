@@ -19,8 +19,10 @@ import pickle
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 import gensim
+import enchant
 dirpath = "corpus/fulltext/"
 embedding_filename = "word2vec.model" 
+#embedding_filename = "w2v_cbow_all_size50_window10" 
 # In[ ]:
 
 
@@ -32,6 +34,8 @@ stop_words_list = set(stopwords.words('english'))
 
 dictionary, word_embeds = pickle.load(open(embedding_filename, 'rb'))
 
+
+
 f=open('filtered_words.txt', 'r')
 words = f.readlines()
 word_index = {}
@@ -39,7 +43,7 @@ simplied_embedding_array = np.zeros((len(words), embedding_size))
 foundEmbed = 0
 for i in range(len(simplied_embedding_array)):
     index = -1
-    w = words[i]
+    w = words[i].strip()
     if w in dictionary:
         index = dictionary[w]
     elif w.lower() in dictionary:
@@ -88,11 +92,14 @@ def get_features(inputs):
 
 def lookup_indexes(sentences):
     sentence_indexes = [];
+    d = enchant.Dict('en_US')
     for word in sentences:
-        if word in word_index:
-            sentence_indexes.append(word_index[word]);
+        if d.check(word):
+            if word in word_index:
+                sentence_indexes.append(word_index[word]);
+            else:
+                sentence_indexes.append(word_index['unk']);
         else:
-            # print("unknown word",word)
             sentence_indexes.append(word_index['unk']);
 
     return sentence_indexes;
