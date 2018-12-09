@@ -30,7 +30,8 @@ start = time.time()
 window_size = 2;
 embedding_size = 50
 stop_words_list = set(stopwords.words('english'))
-
+enchantdict = enchant.Dict('en_US')
+    
 
 dictionary, word_embeds = pickle.load(open(embedding_filename, 'rb'))
 
@@ -92,9 +93,8 @@ def get_features(inputs):
 
 def lookup_indexes(sentences):
     sentence_indexes = [];
-    d = enchant.Dict('en_US')
     for word in sentences:
-        if d.check(word):
+        if enchantdict.check(word):
             if word in word_index:
                 sentence_indexes.append(word_index[word]);
             else:
