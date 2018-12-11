@@ -28,6 +28,7 @@
     b. sudo apt-get update 
        sudo apt-get install python-enchant
     c. pip install -r requirements.txt
+    d. Fetch all folders(models and dataset) from https://drive.google.com/open?id=1A9p3n8bOYdmQwQHd8v22Y--g2w2D0k9S into your local directory
     
 5) Dataset:
     Legal dataset is available in corpus folder (Credits: UCI ML Repository)
